@@ -1,0 +1,6 @@
+package com.github.Hamchilai.si_buzz
+
+import io.flutter.embedding.android.FlutterActivity
+
+class MainActivity: FlutterActivity() {
+}
