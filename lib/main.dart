@@ -46,11 +46,22 @@ class BuzzerState {
 
 class _GameState extends State<SkeletonWidget> {
   int players = 1;
+  final kMaximumPlayers = 8;
   List<BuzzerState> buzzers = [BuzzerState()];
+
   @override
   void initState() {
     super.initState();
   }
+
+  void _AddPlayers(int num) {
+    players += num;
+    assert(players <= kMaximumPlayers);
+    while (buzzers.length < players) {
+      buzzers.add(BuzzerState());
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     // This method is rerun every time setState is called
@@ -58,21 +69,36 @@ class _GameState extends State<SkeletonWidget> {
     // fast, so that you can just rebuild anything that needs updating rather
     // than having to individually change instances of widgets.
     return Scaffold(
-        appBar: AppBar(
-          // Here we take the value from the MyHomePage object that was created by
-          // the App.build method, and use it to set our appbar title.
-          title: Text(widget.title),
-        ),
-        body: Center(
-            child: ListView.builder(
+      appBar: AppBar(
+        // Here we take the value from the MyHomePage object that was created by
+        // the App.build method, and use it to set our appbar title.
+        title: Text(widget.title),
+      ),
+      body: Center(
+          child: ListView.builder(
               itemCount: players,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                      title: Text('${index+1}: ${buzzers[index].pressed}')
-                  );
-                }
-            )
-        )
+              itemBuilder: (context, index) {
+                return ListTile(
+                    title: Text(
+                        'Player ${index + 1}: ${buzzers[index].pressed}'),
+                    onTap: () {
+                      setState(() {
+                        buzzers[index].pressed = !buzzers[index].pressed;
+                      });
+                    }
+                );
+              }
+          )
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          setState(() {
+            _AddPlayers(1);
+          });
+        },
+        tooltip: 'Increment',
+        child: Icon(Icons.add),
+      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
