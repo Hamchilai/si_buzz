@@ -55,8 +55,8 @@ class _GameState extends State<SkeletonWidget> {
   }
 
   void _AddPlayers(int num) {
+    assert(players < kMaximumPlayers);
     players += num;
-    assert(players <= kMaximumPlayers);
     while (buzzers.length < players) {
       buzzers.add(BuzzerState());
     }
