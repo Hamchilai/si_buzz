@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_midi_command/flutter_midi_command.dart';
-
+import 'package:si_buzz/buzzer.dart';
 
 void main() {
   runApp(const MyApp());
@@ -32,6 +32,7 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
 class SkeletonWidget extends StatefulWidget {
   const SkeletonWidget({super.key, required this.title});
   final String title;
@@ -40,26 +41,31 @@ class SkeletonWidget extends StatefulWidget {
   State<SkeletonWidget> createState() => _GameState();
 }
 
-class BuzzerState {
-  bool pressed = false;
-}
-
 class _GameState extends State<SkeletonWidget> {
   int players = 1;
+  int pressedBuzzer = -1;
   final kMaximumPlayers = 8;
-  List<BuzzerState> buzzers = [BuzzerState()];
+  BuzzersWrapper? buzzers;
 
   @override
   void initState() {
     super.initState();
+    buzzers = BuzzersWrapper(callback: onBuzzersChanged);
   }
 
-  void _AddPlayers(int num) {
-    assert(players < kMaximumPlayers);
+  void onBuzzersChanged() {
+    setState(() {
+      pressedBuzzer = -1;
+      final buzzers = this.buzzers!.pressedBuzzers;
+      if (buzzers.isNotEmpty) {
+        pressedBuzzer = buzzers[0];
+      }
+    });
+  }
+
+  void _addPlayers(int num) {
+    assert(players + num <= kMaximumPlayers);
     players += num;
-    while (buzzers.length < players) {
-      buzzers.add(BuzzerState());
-    }
   }
 
   @override
@@ -79,26 +85,25 @@ class _GameState extends State<SkeletonWidget> {
               itemCount: players,
               itemBuilder: (context, index) {
                 return ListTile(
-                    title: Text(
-                        'Player ${index + 1}: ${buzzers[index].pressed}'),
-                    onTap: () {
-                      setState(() {
-                        buzzers[index].pressed = !buzzers[index].pressed;
-                      });
+                    title:
+                        Text('Player ${index + 1}: ${index == pressedBuzzer}'),
+                    onTap: buzzers!.isDebug
+                    ? () {
+                      buzzers!.pressOnForDebug(index);
                     }
-                );
-              }
-          )
-      ),
+                    : null);
+              })),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           setState(() {
-            _AddPlayers(1);
+            _addPlayers(1);
           });
         },
         tooltip: 'Increment',
         child: Icon(Icons.add),
       ), // This trailing comma makes auto-formatting nicer for build methods.
+      persistentFooterButtons: [TextButton(onPressed: buzzers!.reset, child: const Text("Reset"))],
+      persistentFooterAlignment: AlignmentDirectional.centerStart,
     );
   }
 }
@@ -197,21 +202,14 @@ class _MyHomePageState extends State<MyHomePage> {
                           return ListTile(
                             title: Text(
                               device.name,
-                              style: Theme
-                                  .of(context)
-                                  .textTheme
-                                  .headline5,
+                              style: Theme.of(context).textTheme.headline5,
                             ),
                             subtitle: Text(
-                                "ins:${device.inputPorts.length} outs:${device
-                                    .outputPorts.length}, ${device.id}, ${device
-                                    .type}"),
+                                "ins:${device.inputPorts.length} outs:${device.outputPorts.length}, ${device.id}, ${device.type}"),
                           );
                         });
                   }
                   return CircularProgressIndicator();
-                })
-        )
-    );
+                })));
   }
 }
